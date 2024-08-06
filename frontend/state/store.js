@@ -21,25 +21,48 @@
 
 // export const store = resetStore()
 
+// import { configureStore } from '@reduxjs/toolkit';
+// import { pizzaApi } from './pizzaApi';
+// import pizzaSliceReducer from './pizzaSlice'; // Assuming pizzaSlice exports the reducer
+
+// export const store = configureStore({
+//   reducer: {
+//     // Replace 'example' with the actual name of your reducer if needed
+//     pizza: pizzaSliceReducer,
+//     [pizzaApi.reducerPath]: pizzaApi.reducer,
+//   },
+//   middleware: (getDefaultMiddleware) =>
+//     getDefaultMiddleware().concat(pizzaApi.middleware),
+// });
+
+// // If you need to reset the store, you can export a function to do so
+// export const resetStore = () => configureStore({
+//   reducer: {
+//     pizza: pizzaSliceReducer,
+//     [pizzaApi.reducerPath]: pizzaApi.reducer,
+//   },
+//   middleware: (getDefaultMiddleware) =>
+//     getDefaultMiddleware().concat(pizzaApi.middleware),
+// });
+
 import { configureStore } from '@reduxjs/toolkit';
 import { pizzaApi } from './pizzaApi';
 import pizzaSliceReducer from './pizzaSlice'; // Assuming pizzaSlice exports the reducer
 
 export const store = configureStore({
   reducer: {
-    // Replace 'example' with the actual name of your reducer if needed
-    pizza: pizzaSliceReducer,
-    [pizzaApi.reducerPath]: pizzaApi.reducer,
+    pizza: pizzaSliceReducer, // Slice reducer
+    [pizzaApi.reducerPath]: pizzaApi.reducer, // RTK Query reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(pizzaApi.middleware),
 });
 
-// If you need to reset the store, you can export a function to do so
+// Function to reset the store, useful for tests
 export const resetStore = () => configureStore({
   reducer: {
-    pizza: pizzaSliceReducer,
-    [pizzaApi.reducerPath]: pizzaApi.reducer,
+    pizza: pizzaSliceReducer, // Slice reducer
+    [pizzaApi.reducerPath]: pizzaApi.reducer, // RTK Query reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(pizzaApi.middleware),

@@ -67,14 +67,19 @@
 //   )
 // }
 
+
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useCreateOrderMutation } from '../state/pizzaApi';
 
 const initialFormState = {
   fullName: '',
   size: '',
-  toppings: [], // Use an array to manage toppings
+  '1': false,
+  '2': false,
+  '3': false,
+  '4': false,
+  '5': false,
 };
 
 export default function PizzaForm() {
@@ -82,34 +87,26 @@ export default function PizzaForm() {
   const [createOrder, { isLoading, error }] = useCreateOrderMutation();
   const dispatch = useDispatch();
 
-  const handleInputChange = (e) => {
-    const { name, value, checked } = e.target;
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormState((prevState) => ({
       ...prevState,
-      [name]: name === 'toppings' ? (checked ? [...prevState.toppings, value] : prevState.toppings.filter((t) => t !== value)) : value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formState.fullName && formState.size) {
-      createOrder({
-        fullName: formState.fullName,
-        size: formState.size,
-        toppings: formState.toppings.map((t) => parseInt(t)), // Convert toppings to integers
-      }).unwrap()
-        .then(() => {
-          // Reset form state on success
-          setFormState(initialFormState);
-        })
-        .catch((err) => {
-          // Handle error from server
-          console.error('Order submission failed:', err);
-        });
-    } else {
-      // Handle form validation errors
-      console.error('Form is invalid');
-    }
+    const toppings = Object.keys(formState).filter(
+      (key) => formState[key] === true
+    );
+    const order = {
+      fullName: formState.fullName,
+      size: formState.size,
+      toppings,
+    };
+    await createOrder(order);
+    setFormState(initialFormState);
   };
 
   return (
@@ -128,7 +125,7 @@ export default function PizzaForm() {
             placeholder="Type full name"
             type="text"
             value={formState.fullName}
-            onChange={handleInputChange}
+            onChange={handleChange}
           />
         </div>
       </div>
@@ -141,7 +138,8 @@ export default function PizzaForm() {
             id="size"
             name="size"
             value={formState.size}
-            onChange={handleInputChange}>
+            onChange={handleChange}
+          >
             <option value="">----Choose size----</option>
             <option value="S">Small</option>
             <option value="M">Medium</option>
@@ -154,21 +152,55 @@ export default function PizzaForm() {
         <label>
           <input
             data-testid="checkPepperoni"
-            name="toppings"
+            name="1"
             type="checkbox"
-            value="1"
-            checked={formState.toppings.includes('1')}
-            onChange={handleInputChange}
+            checked={formState['1']}
+            onChange={handleChange}
           />
           Pepperoni<br />
         </label>
-        {/* Repeat for other toppings with appropriate values (2, 3, 4, 5) */}
+        <label>
+          <input
+            data-testid="checkGreenpeppers"
+            name="2"
+            type="checkbox"
+            checked={formState['2']}
+            onChange={handleChange}
+          />
+          Green Peppers<br />
+        </label>
+        <label>
+          <input
+            data-testid="checkPineapple"
+            name="3"
+            type="checkbox"
+            checked={formState['3']}
+            onChange={handleChange}
+          />
+          Pineapple<br />
+        </label>
+        <label>
+          <input
+            data-testid="checkMushrooms"
+            name="4"
+            type="checkbox"
+            checked={formState['4']}
+            onChange={handleChange}
+          />
+          Mushrooms<br />
+        </label>
+        <label>
+          <input
+            data-testid="checkHam"
+            name="5"
+            type="checkbox"
+            checked={formState['5']}
+            onChange={handleChange}
+          />
+          Ham<br />
+        </label>
       </div>
-      <input
-        data-testid="submit"
-        type="submit"
-        value="Submit Order"
-      />
+      <input data-testid="submit" type="submit" />
     </form>
   );
 }

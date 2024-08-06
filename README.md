@@ -95,18 +95,18 @@ This endpoint allows you to POST a new pizza order. Here is an example of a vali
   - The Redux store
 
 ❗ Validation is performed server-side only, do not implement frontend validation
-
-❗ Make sure all readable texts match those of the prototype
-
-## 📝 Notes on the tests
-
-❗ The tests in [codegrade.test.js](./codegrade.test.js) depend on being able to locate the elements containing the following `data-testid` attributes. Careful not delete neither the elements nor the attributes from the JSX:
+tests in [codegrade.test.js](./codegrade.test.js) depend on being able to locate the elements containing the following `data-testid` attributes. Careful not delete neither the elements nor the attributes from the JSX:
 
 - `data-testid="fullNameInput"` for the input box
 - `data-testid="sizeSelect"` for the dropdown
 - `data-testid="checkPepperoni"` **etc** for the checkboxes
 - `data-testid="submit"` for the submit button
 - `data-testid="filterBtnAll"` **etc** for the filter buttons
+❗ Make sure all readable texts match those of the prototype
+
+## 📝 Notes on the tests
+
+❗ The 
 
 ## FAQ
 

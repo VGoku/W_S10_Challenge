@@ -38,45 +38,33 @@
 //   )
 // }
 
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useGetOrdersQuery } from '../state/pizzaApi';
 import { setFilter } from '../state/pizzaSlice';
 
 export default function OrderList() {
-  // Use the RTK Query hook to fetch the orders
-  const { data: orders, isLoading, error } = useGetOrdersQuery();
-  // Use Redux to manage the filter state
-  const filter = useSelector((state) => state.pizza.filter);
   const dispatch = useDispatch();
+  const filter = useSelector((state) => state.pizza.filter);
+  const { data: orders = [], error, isLoading } = useGetOrdersQuery();
 
-  // State to hold the filtered orders
-  const [filteredOrders, setFilteredOrders] = useState([]);
+  const filteredOrders = orders.filter(
+    (order) => filter === 'All' || order.size === filter
+  );
 
-  useEffect(() => {
-    // Update the filtered orders when the filter or orders change
-    setFilteredOrders(
-      orders?.filter((order) => filter === 'All' || order.size === filter)
-    );
-  }, [orders, filter]);
-
-  // Handle filter button clicks
-  const handleFilterClick = (size) => {
-    dispatch(setFilter(size));
-  };
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div id="orderList">
       <h2>Pizza Orders</h2>
-      {isLoading && <p>Loading...</p>}
-      {error && <p>Error fetching orders: {error.message}</p>}
       <ol>
         {filteredOrders.map((order) => (
           <li key={order.id}>
             <div>
-              {/* Render order details here */}
-              {order.fullName} ordered a size {order.size} pizza{' '}
-              {order.toppings?.length ? `with ${order.toppings.length} toppings` : 'with no toppings'}
+              {order.fullName} ordered a size {order.size} with{' '}
+              {order.toppings.length === 0 ? 'no toppings' : `${order.toppings.length} toppings`}
             </div>
           </li>
         ))}
@@ -86,9 +74,10 @@ export default function OrderList() {
         {['All', 'S', 'M', 'L'].map((size) => (
           <button
             data-testid={`filterBtn${size}`}
-            className={`button-filter ${size === filter ? 'active' : ''}`}
+            className={`button-filter${size === filter ? ' active' : ''}`}
             key={size}
-            onClick={() => handleFilterClick(size)}>
+            onClick={() => dispatch(setFilter(size))}
+          >
             {size}
           </button>
         ))}
