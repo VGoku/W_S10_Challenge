@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { pizzaApi } from './pizzaApi';
+
 
 const initialState = {
-  filter: 'All',
+  size: 'All',
 };
 
 const pizzaSlice = createSlice({
@@ -10,7 +10,7 @@ const pizzaSlice = createSlice({
   initialState,
   reducers: {
     setFilter: (state, action) => {
-      state.filter = action.payload;
+      state.size = action.payload;
     },
   },
 });

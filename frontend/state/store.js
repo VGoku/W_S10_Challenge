@@ -22,7 +22,7 @@
 
 import { configureStore } from '@reduxjs/toolkit';
 import { pizzaApi } from './pizzaApi';
-import pizzaSliceReducer from './pizzaSlice'; // Assuming pizzaSlice exports the reducer
+import pizzaSliceReducer from './pizzaSlice'; 
 
 export const store = configureStore({
   reducer: {
