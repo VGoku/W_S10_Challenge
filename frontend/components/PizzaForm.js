@@ -3,7 +3,7 @@
 // import { store } from '../state/store';
 // import { pizzaApi } from '../state/pizzaApi';
 
-// const initialFormState = { // suggested
+// const initialform = { // suggested
 //   fullName: '',
 //   size: '',
 //   '1': false,
@@ -68,8 +68,7 @@
 // }
 
 
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useReducer, useState } from 'react';
 import { useCreateOrderMutation } from '../state/pizzaApi';
 
 const initialFormState = {
@@ -82,35 +81,42 @@ const initialFormState = {
   '5': false,
 };
 
+const reducer = (state, action) => {
+  switch(action.type) {
+    case "CHANGE_INPUT": {
+      const {name, value} = action.payload
+      return {...state, [name]: value}
+    }
+    case "RESET_FORM": 
+    return initialFormState
+    default: return state
+  }
+}
 export default function PizzaForm() {
-  const [formState, setFormState] = useState(initialFormState);
+  const [form, dispatch] = useReducer(reducer, initialFormState);
   const [createOrder, { isLoading, error }] = useCreateOrderMutation();
-  const dispatch = useDispatch();
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormState((prevState) => ({
-      ...prevState,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+  const onChange = (evt) => {
+    let { name, value, type, checked } = evt.target;
+    let valueToUse = type === "checkbox" ? checked : value;
+    dispatch({ type: "CHANGE_INPUT", payload: { name, value: valueToUse } });
   };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const toppings = Object.keys(formState).filter(
-      (key) => formState[key] === true
-    );
-    const order = {
-      fullName: formState.fullName,
-      size: formState.size,
-      toppings,
-    };
-    await createOrder(order);
-    setFormState(initialFormState);
+  const onSubmit = (evt) => {
+    evt.preventDefault();
+    let { fullName, size, ...toppingsSelection } = form;
+    let toppings = [];
+    for (let key in toppingsSelection) {
+      if (toppingsSelection[key]) toppings.push(key);
+    }
+    let requestBody = { fullName, size, toppings };
+    createOrder(requestBody)
+      .unwrap()
+      .then(() => {
+        dispatch({ type: "RESET_FORM" });
+      })
+      .catch(() => {});
   };
-
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={onSubmit}>
       <h2>Pizza Form</h2>
       {isLoading && <div className='pending'>Order in progress...</div>}
       {error && <div className='failure'>Order failed: {error.data.message}</div>}
@@ -124,8 +130,8 @@ export default function PizzaForm() {
             name="fullName"
             placeholder="Type full name"
             type="text"
-            value={formState.fullName}
-            onChange={handleChange}
+            value={form.fullName}
+            onChange={onChange}
           />
         </div>
       </div>
@@ -137,8 +143,8 @@ export default function PizzaForm() {
             data-testid="sizeSelect"
             id="size"
             name="size"
-            value={formState.size}
-            onChange={handleChange}
+            value={form.size}
+            onChange={onChange}
           >
             <option value="">----Choose size----</option>
             <option value="S">Small</option>
@@ -154,8 +160,8 @@ export default function PizzaForm() {
             data-testid="checkPepperoni"
             name="1"
             type="checkbox"
-            checked={formState['1']}
-            onChange={handleChange}
+            checked={form['1']}
+            onChange={onChange}
           />
           Pepperoni<br />
         </label>
@@ -164,8 +170,8 @@ export default function PizzaForm() {
             data-testid="checkGreenpeppers"
             name="2"
             type="checkbox"
-            checked={formState['2']}
-            onChange={handleChange}
+            checked={form['2']}
+            onChange={onChange}
           />
           Green Peppers<br />
         </label>
@@ -174,8 +180,8 @@ export default function PizzaForm() {
             data-testid="checkPineapple"
             name="3"
             type="checkbox"
-            checked={formState['3']}
-            onChange={handleChange}
+            checked={form['3']}
+            onChange={onChange}
           />
           Pineapple<br />
         </label>
@@ -184,8 +190,8 @@ export default function PizzaForm() {
             data-testid="checkMushrooms"
             name="4"
             type="checkbox"
-            checked={formState['4']}
-            onChange={handleChange}
+            checked={form['4']}
+            onChange={onChange}
           />
           Mushrooms<br />
         </label>
@@ -194,8 +200,8 @@ export default function PizzaForm() {
             data-testid="checkHam"
             name="5"
             type="checkbox"
-            checked={formState['5']}
-            onChange={handleChange}
+            checked={form['5']}
+            onChange={onChange}
           />
           Ham<br />
         </label>

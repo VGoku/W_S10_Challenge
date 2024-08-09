@@ -22,16 +22,7 @@
 
 import { configureStore } from '@reduxjs/toolkit';
 import { pizzaApi } from './pizzaApi';
-import pizzaSliceReducer from './pizzaSlice'; 
-
-export const store = configureStore({
-  reducer: {
-    pizza: pizzaSliceReducer, // Slice reducer
-    [pizzaApi.reducerPath]: pizzaApi.reducer, // RTK Query reducer
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(pizzaApi.middleware),
-});
+import pizzaSliceReducer from './pizzaSlice';
 
 // Function to reset the store, useful for tests
 export const resetStore = () => configureStore({
@@ -42,3 +33,5 @@ export const resetStore = () => configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(pizzaApi.middleware),
 });
+
+export const store = resetStore()

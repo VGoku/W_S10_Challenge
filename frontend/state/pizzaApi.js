@@ -36,10 +36,10 @@ export const pizzaApi = createApi({
       providesTags: ["Orders"]
     }),
     createOrder: build.mutation({
-      query: (newOrder) => ({
+      query: (body) => ({
         url: "pizza/order",
         method: "POST",
-        body: newOrder,
+        body,
       }),
       invalidatesTags: ["Orders"],
     }),
