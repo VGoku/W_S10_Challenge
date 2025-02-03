@@ -45,16 +45,38 @@ import React from 'react';
 import { useGetOrdersQuery } from '../state/pizzaApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { setFilter } from '../state/pizzaSlice';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faPizzaSlice,
+  faFilter,
+  faUser,
+  faRuler
+} from '@fortawesome/free-solid-svg-icons';
+
+const getSizeIcon = (size) => {
+  switch (size) {
+    case 'S':
+      return '🍕';
+    case 'M':
+      return '🍕🍕';
+    case 'L':
+      return '🍕🍕🍕';
+    default:
+      return '🍕';
+  }
+};
 
 export default function OrderList() {
   const orders = useGetOrdersQuery().data || [];
   const currentFilter = useSelector(st => st.pizza.size);
   const dispatch = useDispatch();
 
-  
   return (
     <div id="orderList">
-      <h2>Pizza Orders</h2>
+      <h2>
+        <FontAwesomeIcon icon={faPizzaSlice} className="pizza-icon" />
+        Pizza Orders
+      </h2>
       <ol>
         {orders &&
           orders
@@ -65,10 +87,19 @@ export default function OrderList() {
               const { id, customer, size, toppings } = ord;
               return (
                 <li key={id}>
-                  <div>
-                    {customer} ordered a size {size} with{" "}
-                    {toppings?.length || "no"} topping
-                    {toppings && toppings.length === 1 ? "" : "s"}
+                  <div className="order-details">
+                    <div>
+                      <FontAwesomeIcon icon={faUser} className="pizza-icon" />
+                      <strong>{customer}</strong>
+                    </div>
+                    <div>
+                      <FontAwesomeIcon icon={faRuler} className="pizza-icon" />
+                      Size: {size} {getSizeIcon(size)}
+                    </div>
+                    <div>
+                      <FontAwesomeIcon icon={faPizzaSlice} className="pizza-icon" />
+                      Toppings: {toppings?.length || "no"} {toppings?.length === 1 ? "topping" : "toppings"}
+                    </div>
                   </div>
                 </li>
               );
@@ -76,23 +107,22 @@ export default function OrderList() {
       </ol>
 
       <div id="sizeFilters">
+        <FontAwesomeIcon icon={faFilter} className="pizza-icon" />
         Filter by size:
         {['All', 'S', 'M', 'L'].map(size => {
           const onClick = () => dispatch(setFilter(size));
-          const className = `button-filter${size === "All" ? " active" : ""}`
-          return  (
-
-          
-          <button
-            data-testid={`filterBtn${size}`}
-            className={className}
-            key={size}
-            onClick={onClick}
-          >
-            {size}
-          </button>
-        )
-})}
+          const className = `button-filter${size === currentFilter ? " active" : ""}`;
+          return (
+            <button
+              data-testid={`filterBtn${size}`}
+              className={className}
+              key={size}
+              onClick={onClick}
+            >
+              {size === 'All' ? size : getSizeIcon(size)}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

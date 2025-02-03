@@ -68,8 +68,19 @@
 // }
 
 
-import React, { useReducer, useState } from 'react';
+import React, { useReducer } from 'react';
 import { useCreateOrderMutation } from '../state/pizzaApi';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faPizzaSlice,
+  faPepperHot,
+  faSeedling,
+  faLeaf,
+  faCircle,
+  faBacon,
+  faSpinner,
+  faExclamationCircle
+} from '@fortawesome/free-solid-svg-icons';
 
 const initialFormState = {
   fullName: '',
@@ -82,24 +93,36 @@ const initialFormState = {
 };
 
 const reducer = (state, action) => {
-  switch(action.type) {
+  switch (action.type) {
     case "CHANGE_INPUT": {
-      const {name, value} = action.payload
-      return {...state, [name]: value}
+      const { name, value } = action.payload;
+      return { ...state, [name]: value };
     }
-    case "RESET_FORM": 
-    return initialFormState
-    default: return state
+    case "RESET_FORM":
+      return initialFormState;
+    default:
+      return state;
   }
-}
+};
+
+const TOPPINGS = [
+  { id: '1', name: 'Pepperoni', icon: faPepperHot },
+  { id: '2', name: 'Green Peppers', icon: faSeedling },
+  { id: '3', name: 'Pineapple', icon: faLeaf },
+  { id: '4', name: 'Mushrooms', icon: faCircle },
+  { id: '5', name: 'Ham', icon: faBacon },
+];
+
 export default function PizzaForm() {
   const [form, dispatch] = useReducer(reducer, initialFormState);
   const [createOrder, { isLoading, error }] = useCreateOrderMutation();
+
   const onChange = (evt) => {
     let { name, value, type, checked } = evt.target;
     let valueToUse = type === "checkbox" ? checked : value;
     dispatch({ type: "CHANGE_INPUT", payload: { name, value: valueToUse } });
   };
+
   const onSubmit = (evt) => {
     evt.preventDefault();
     let { fullName, size, ...toppingsSelection } = form;
@@ -113,13 +136,24 @@ export default function PizzaForm() {
       .then(() => {
         dispatch({ type: "RESET_FORM" });
       })
-      .catch(() => {});
+      .catch(() => { });
   };
+
   return (
     <form onSubmit={onSubmit}>
-      <h2>Pizza Form</h2>
-      {isLoading && <div className='pending'>Order in progress...</div>}
-      {error && <div className='failure'>Order failed: {error.data.message}</div>}
+      <h2><FontAwesomeIcon icon={faPizzaSlice} className="pizza-icon" />Pizza Form</h2>
+      {isLoading && (
+        <div className='pending'>
+          <FontAwesomeIcon icon={faSpinner} spin />
+          Order in progress...
+        </div>
+      )}
+      {error && (
+        <div className='failure'>
+          <FontAwesomeIcon icon={faExclamationCircle} />
+          Order failed: {error.data.message}
+        </div>
+      )}
 
       <div className="input-group">
         <div>
@@ -155,58 +189,21 @@ export default function PizzaForm() {
       </div>
 
       <div className="input-group">
-        <label>
-          <input
-            data-testid="checkPepperoni"
-            name="1"
-            type="checkbox"
-            checked={form['1']}
-            onChange={onChange}
-          />
-          Pepperoni<br />
-        </label>
-        <label>
-          <input
-            data-testid="checkGreenpeppers"
-            name="2"
-            type="checkbox"
-            checked={form['2']}
-            onChange={onChange}
-          />
-          Green Peppers<br />
-        </label>
-        <label>
-          <input
-            data-testid="checkPineapple"
-            name="3"
-            type="checkbox"
-            checked={form['3']}
-            onChange={onChange}
-          />
-          Pineapple<br />
-        </label>
-        <label>
-          <input
-            data-testid="checkMushrooms"
-            name="4"
-            type="checkbox"
-            checked={form['4']}
-            onChange={onChange}
-          />
-          Mushrooms<br />
-        </label>
-        <label>
-          <input
-            data-testid="checkHam"
-            name="5"
-            type="checkbox"
-            checked={form['5']}
-            onChange={onChange}
-          />
-          Ham<br />
-        </label>
+        {TOPPINGS.map(topping => (
+          <label key={topping.id} className="topping-label">
+            <input
+              data-testid={`check${topping.name.replace(/\s+/g, '')}`}
+              name={topping.id}
+              type="checkbox"
+              checked={form[topping.id]}
+              onChange={onChange}
+            />
+            <FontAwesomeIcon icon={topping.icon} className="pizza-icon" />
+            {topping.name}
+          </label>
+        ))}
       </div>
-      <input data-testid="submit" type="submit" />
+      <input data-testid="submit" type="submit" value="Place Order" />
     </form>
   );
 }
