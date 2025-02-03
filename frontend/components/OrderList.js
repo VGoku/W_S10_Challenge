@@ -67,12 +67,21 @@ const getSizeIcon = (size) => {
 };
 
 export default function OrderList() {
-  const { data } = useGetOrdersQuery();
+  const { data: orders = [], isLoading, error } = useGetOrdersQuery();
   const currentFilter = useSelector(st => st.pizza.size);
   const dispatch = useDispatch();
 
-  // Safely access the orders array
-  const orders = data?.orders || [];
+  if (isLoading) {
+    return <div>Loading orders...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading orders: {error.message}</div>;
+  }
+
+  const filteredOrders = Array.isArray(orders)
+    ? orders.filter(ord => currentFilter === "All" || currentFilter === ord.size)
+    : [];
 
   return (
     <div id="orderList">
@@ -81,29 +90,27 @@ export default function OrderList() {
         Pizza Orders
       </h2>
       <ol>
-        {orders
-          .filter(ord => currentFilter === "All" || currentFilter === ord.size)
-          .map(ord => {
-            const { id, customer, size, toppings } = ord;
-            return (
-              <li key={id}>
-                <div className="order-details">
-                  <div>
-                    <FontAwesomeIcon icon={faUser} className="pizza-icon" />
-                    <strong>{customer}</strong>
-                  </div>
-                  <div>
-                    <FontAwesomeIcon icon={faRuler} className="pizza-icon" />
-                    Size: {size} {getSizeIcon(size)}
-                  </div>
-                  <div>
-                    <FontAwesomeIcon icon={faPizzaSlice} className="pizza-icon" />
-                    Toppings: {toppings?.length || "no"} {toppings?.length === 1 ? "topping" : "toppings"}
-                  </div>
+        {filteredOrders.map(ord => {
+          const { id, customer, size, toppings = [] } = ord;
+          return (
+            <li key={id}>
+              <div className="order-details">
+                <div>
+                  <FontAwesomeIcon icon={faUser} className="pizza-icon" />
+                  <strong>{customer}</strong>
                 </div>
-              </li>
-            );
-          })}
+                <div>
+                  <FontAwesomeIcon icon={faRuler} className="pizza-icon" />
+                  Size: {size} {getSizeIcon(size)}
+                </div>
+                <div>
+                  <FontAwesomeIcon icon={faPizzaSlice} className="pizza-icon" />
+                  Toppings: {toppings.length || "no"} {toppings.length === 1 ? "topping" : "toppings"}
+                </div>
+              </div>
+            </li>
+          );
+        })}
       </ol>
 
       <div id="sizeFilters">

@@ -98,19 +98,14 @@ const validateOrder = (order) => {
 
 export const pizzaApi = createApi({
   reducerPath: "pizzaApi",
-  baseQuery: () => ({ data: null }), // Dummy base query since we're using queryFn
+  baseQuery: () => ({ data: null }),
   tagTypes: ["Orders"],
   endpoints: (builder) => ({
     getOrders: builder.query({
       queryFn: () => {
         try {
-          return {
-            data: {
-              success: true,
-              orders: orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
-              message: 'Orders retrieved successfully'
-            }
-          };
+          // Return orders directly as the data
+          return { data: orders };
         } catch (error) {
           return {
             error: {
@@ -125,26 +120,38 @@ export const pizzaApi = createApi({
     createOrder: builder.mutation({
       queryFn: (newOrder) => {
         try {
-          // Validate the order
-          const validationErrors = validateOrder(newOrder);
-          if (validationErrors.length > 0) {
+          // Validate required fields
+          if (!newOrder.fullName?.trim()) {
             return {
               error: {
                 status: 400,
-                data: {
-                  message: 'Validation failed',
-                  errors: validationErrors
-                }
+                data: { message: 'Full name is required' }
+              }
+            };
+          }
+          if (!newOrder.size) {
+            return {
+              error: {
+                status: 400,
+                data: { message: 'Pizza size is required' }
+              }
+            };
+          }
+          if (!newOrder.toppings || !Array.isArray(newOrder.toppings) || newOrder.toppings.length === 0) {
+            return {
+              error: {
+                status: 400,
+                data: { message: 'At least one topping is required' }
               }
             };
           }
 
-          // Create new order with current timestamp
+          // Create new order
           const order = {
             id: nextId++,
             customer: newOrder.fullName.trim(),
             size: newOrder.size,
-            toppings: newOrder.toppings,
+            toppings: Array.isArray(newOrder.toppings) ? newOrder.toppings : [],
             timestamp: new Date().toISOString(),
             status: 'in_progress'
           };
@@ -152,18 +159,12 @@ export const pizzaApi = createApi({
           // Add to mock database
           orders = [order, ...orders];
 
-          return {
-            data: {
-              success: true,
-              message: 'Order created successfully! Your pizza is being prepared.',
-              order
-            }
-          };
+          return { data: order };
         } catch (error) {
           return {
             error: {
               status: 500,
-              data: { message: 'An unexpected error occurred while creating your order. Please try again.' }
+              data: { message: 'An unexpected error occurred while creating your order' }
             }
           };
         }
