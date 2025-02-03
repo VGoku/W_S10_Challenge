@@ -15,7 +15,7 @@ const SERVER_URL = /http:\/\/localhost:9009/g
 const FRONTEND_PORT = 3003
 
 const DIST_PATH = 'dist'
-const PUBLIC_PATH = '/'
+const PUBLIC_PATH = IS_DEV ? '/' : './'
 const INDEX_HTML_PATH = './frontend/index.html'
 const INDEX_JS_PATH = './frontend/index.js'
 
@@ -37,6 +37,7 @@ const config = {
     new HtmlWebpackPlugin({
       template: INDEX_HTML_PATH,
       inject: true,
+      publicPath: '/',
       minify: !IS_DEV && {
         removeComments: true,
         collapseWhitespace: true,
@@ -58,7 +59,7 @@ const config = {
   devServer: {
     static: {
       directory: path.join(__dirname, DIST_PATH),
-      publicPath: PUBLIC_PATH
+      publicPath: '/'
     },
     historyApiFallback: true,
     compress: true,
@@ -92,7 +93,12 @@ const config = {
         test: /\.css$/i,
         use: [
           IS_DEV ? 'style-loader' : MiniCssExtractPlugin.loader,
-          CSS_LOADER
+          {
+            loader: CSS_LOADER,
+            options: {
+              importLoaders: 1
+            }
+          }
         ]
       },
       {

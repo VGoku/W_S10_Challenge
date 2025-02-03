@@ -12,21 +12,43 @@
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
+      "src": "^/static/(.*)",
       "headers": {
-        "cache-control": "public, max-age=31536000, immutable"
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": {
+          "js": "application/javascript",
+          "css": "text/css",
+          "map": "application/json"
+        }
       },
+      "continue": true,
       "dest": "/static/$1"
     },
     {
-      "src": "/(.*)\\.(?:js|css|json|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|otf)$",
+      "src": "^/static/js/(.+\\.js)$",
+      "headers": {
+        "content-type": "application/javascript",
+        "cache-control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/static/js/$1"
+    },
+    {
+      "src": "^/static/css/(.+\\.css)$",
+      "headers": {
+        "content-type": "text/css",
+        "cache-control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/static/css/$1"
+    },
+    {
+      "src": "^/(.*\\.[a-z]+)$",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
       },
-      "dest": "/$1.$2"
+      "dest": "/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "^/(.*)$",
       "headers": {
         "cache-control": "public, no-cache, must-revalidate"
       },
