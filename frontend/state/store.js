@@ -21,17 +21,20 @@
 
 
 import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import { pizzaApi } from './pizzaApi';
 import pizzaSliceReducer from './pizzaSlice';
 
-// Function to reset the store, useful for tests
-export const resetStore = () => configureStore({
+export const store = configureStore({
   reducer: {
-    pizza: pizzaSliceReducer, // Slice reducer
-    [pizzaApi.reducerPath]: pizzaApi.reducer, // RTK Query reducer
+    pizza: pizzaSliceReducer,
+    [pizzaApi.reducerPath]: pizzaApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(pizzaApi.middleware),
 });
 
-export const store = resetStore()
+setupListeners(store.dispatch);
+
+// Export store directly instead of using resetStore
+export default store;

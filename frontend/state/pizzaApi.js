@@ -24,7 +24,7 @@
 // } = pizzaApi
 
 
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from '@reduxjs/toolkit/query/react';
 
 // Available pizza sizes and toppings
 export const PIZZA_SIZES = ['S', 'M', 'L', 'XL'];
@@ -39,72 +39,59 @@ export const PIZZA_TOPPINGS = [
   'Bacon'
 ];
 
-// Mock data with realistic orders
+// Mock data
 const mockOrders = [
   {
     id: 1,
     customer: 'John Doe',
     size: 'L',
-    toppings: ['Pepperoni', 'Mushrooms', 'Extra Cheese'],
-    timestamp: '2024-02-10T14:30:00Z'
+    toppings: ['Pepperoni', 'Mushrooms'],
+    timestamp: new Date().toISOString()
   },
   {
     id: 2,
     customer: 'Jane Smith',
     size: 'M',
-    toppings: ['Olives', 'Bell Peppers', 'Onions'],
-    timestamp: '2024-02-10T14:15:00Z'
+    toppings: ['Olives', 'Bell Peppers'],
+    timestamp: new Date().toISOString()
   },
   {
     id: 3,
     customer: 'Bob Wilson',
-    size: 'L',
-    toppings: ['Pepperoni', 'Sausage', 'Bacon', 'Extra Cheese'],
-    timestamp: '2024-02-10T14:00:00Z'
+    size: 'S',
+    toppings: ['Pepperoni', 'Extra Cheese'],
+    timestamp: new Date().toISOString()
   }
 ];
 
-let nextId = 4;
 let orders = [...mockOrders];
+let nextId = 4;
 
-// Dummy base query that always returns success
-const dummyBaseQuery = fetchBaseQuery({
-  baseUrl: '/',
-});
-
+// Create the API
 export const pizzaApi = createApi({
   reducerPath: 'pizzaApi',
-  baseQuery: dummyBaseQuery,
+  baseQuery: () => ({ data: null }),
   tagTypes: ['Orders'],
   endpoints: (builder) => ({
     getOrders: builder.query({
-      queryFn: () => {
-        return { data: orders };
-      },
+      queryFn: () => ({ data: orders }),
       providesTags: ['Orders'],
     }),
     createOrder: builder.mutation({
       queryFn: (newOrder) => {
-        if (!newOrder.fullName?.trim()) {
-          throw new Error('Full name is required');
+        try {
+          const order = {
+            id: nextId++,
+            customer: newOrder.fullName,
+            size: newOrder.size,
+            toppings: newOrder.toppings || [],
+            timestamp: new Date().toISOString()
+          };
+          orders = [order, ...orders];
+          return { data: order };
+        } catch (error) {
+          return { error: { message: error.message } };
         }
-        if (!newOrder.size) {
-          throw new Error('Size is required');
-        }
-        if (!newOrder.toppings?.length) {
-          throw new Error('At least one topping is required');
-        }
-
-        const order = {
-          id: nextId++,
-          customer: newOrder.fullName.trim(),
-          size: newOrder.size,
-          toppings: newOrder.toppings,
-          timestamp: new Date().toISOString()
-        };
-
-        orders = [order, ...orders];
-        return { data: order };
       },
       invalidatesTags: ['Orders'],
     }),
