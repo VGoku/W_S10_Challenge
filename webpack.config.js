@@ -27,7 +27,7 @@ const config = {
   output: {
     path: path.resolve(__dirname, DIST_PATH),
     filename: IS_DEV ? '[name].js' : 'static/js/[name].[contenthash:8].js',
-    chunkFilename: IS_DEV ? '[name].chunk.js' : 'static/js/[name].[contenthash:8].chunk.js',
+    chunkFilename: IS_DEV ? '[name].chunk.js' : 'static/js/[name].[contenthash:8].js',
     publicPath: PUBLIC_PATH,
     clean: true,
     assetModuleFilename: 'static/media/[name].[hash:8][ext]'
@@ -53,7 +53,7 @@ const config = {
     }),
     new MiniCssExtractPlugin({
       filename: IS_DEV ? '[name].css' : 'static/css/[name].[contenthash:8].css',
-      chunkFilename: IS_DEV ? '[name].chunk.css' : 'static/css/[name].[contenthash:8].chunk.css'
+      chunkFilename: IS_DEV ? '[name].chunk.css' : 'static/css/[name].[contenthash:8].css'
     })
   ],
   devServer: {
@@ -167,9 +167,7 @@ const config = {
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           name(module) {
-            // Get the package name
             const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1]
-            // Replace @ symbols and slashes with hyphens for cleaner chunk names
             return `vendor.${packageName.replace('@', '').replace('/', '-')}`
           },
           priority: 20
