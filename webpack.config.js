@@ -17,7 +17,20 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './frontend/index.html'
+      template: './frontend/index.html',
+      favicon: './frontend/favicon.ico',
+      minify: !IS_DEV && {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeRedundantAttributes: true,
+        useShortDoctype: true,
+        removeEmptyAttributes: true,
+        removeStyleLinkTypeAttributes: true,
+        keepClosingSlash: true,
+        minifyJS: true,
+        minifyCSS: true,
+        minifyURLs: true
+      }
     }),
     new MiniCssExtractPlugin({
       filename: IS_DEV ? '[name].css' : '[name].[contenthash].css'
@@ -48,9 +61,14 @@ module.exports = {
       },
       {
         test: /\.(png|jpe?g|gif|svg|ico|ttf|woff|woff2|eot|otf)$/,
-        type: 'asset/resource',
+        type: 'asset',
+        parser: {
+          dataUrlCondition: {
+            maxSize: 8 * 1024 // 8kb
+          }
+        },
         generator: {
-          filename: 'assets/[name][ext]'
+          filename: 'assets/[name].[hash][ext]'
         }
       }
     ]
@@ -61,6 +79,16 @@ module.exports = {
   devServer: {
     port: 3003,
     historyApiFallback: true,
-    hot: true
+    hot: true,
+    static: {
+      directory: path.join(__dirname, 'dist'),
+      publicPath: '/'
+    }
+  },
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      name: false
+    }
   }
 }
