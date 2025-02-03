@@ -33,9 +33,9 @@ export default function App() {
               className="pizza-icon"
               style={{ marginRight: '1rem' }}
             />
-            Pizza Paradise
+            VGoku Pizzeria
           </h1>
-          <p className="subtitle">The best pizza ordering app in town! 🌟</p>
+          <p className="subtitle">Legendary Pizza, Delivered to Your Door! 🌟</p>
         </header>
 
         <div id="app">
@@ -44,7 +44,7 @@ export default function App() {
         </div>
 
         <footer>
-          <p>© {new Date().getFullYear()} Pizza Paradise. All rights reserved. 🍕</p>
+          <p>© {new Date().getFullYear()} VGoku Pizzeria. All rights reserved. 🍕</p>
         </footer>
       </div>
     </Provider>
