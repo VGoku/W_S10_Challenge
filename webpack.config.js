@@ -16,13 +16,14 @@ const SERVER_URL = /http:\/\/localhost:9009/g
 const FRONTEND_PORT = 3003
 
 const DIST_PATH = 'dist'
-const PUBLIC_PATH = IS_DEV ? '/' : './'
+const PUBLIC_PATH = '/'
 const INDEX_HTML_PATH = './frontend/index.html'
 const INDEX_JS_PATH = './frontend/index.js'
 const AUDIO_PATH = 'audio/'
 
-const JS_NAME = IS_DEV ? 'index.js' : 'index.[contenthash].js'
-const CSS_NAME = IS_DEV ? 'style.css' : 'style.[contenthash].css'
+const JS_NAME = '[name].[contenthash].js'
+const CSS_NAME = '[name].[contenthash].css'
+const MEDIA_NAME = 'media/[name].[hash].[ext]'
 const MP3_NAME = '[name].[ext]'
 
 const SOURCE_MAP = IS_DEV ? 'source-map' : false
@@ -34,15 +35,29 @@ const config = {
     filename: JS_NAME,
     publicPath: PUBLIC_PATH,
     path: path.resolve(__dirname, DIST_PATH),
+    clean: true
   },
   devtool: SOURCE_MAP,
   plugins: [
     new HtmlWebpackPlugin({
       template: INDEX_HTML_PATH,
+      inject: true,
+      minify: {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeRedundantAttributes: true,
+        useShortDoctype: true,
+        removeEmptyAttributes: true,
+        removeStyleLinkTypeAttributes: true,
+        keepClosingSlash: true,
+        minifyJS: true,
+        minifyCSS: true,
+        minifyURLs: true
+      }
     }),
     new MiniCssExtractPlugin({
-      filename: CSS_NAME,
-    }),
+      filename: CSS_NAME
+    })
   ],
   devServer: {
     static: path.join(__dirname, DIST_PATH),
@@ -50,29 +65,43 @@ const config = {
     compress: true,
     port: FRONTEND_PORT,
     client: { logging: 'none' },
+    hot: true
   },
   module: {
     rules: [
       {
-        test: /\.html$/i,
+        test: /\.(js|jsx)$/,
         exclude: /node_modules/,
-        use: { loader: HTML_LOADER }
+        use: {
+          loader: BABEL_LOADER,
+          options: {
+            presets: [
+              '@babel/preset-env',
+              ['@babel/preset-react', { runtime: 'automatic' }]
+            ],
+            plugins: ['babel-plugin-styled-components'],
+            cacheDirectory: true,
+            cacheCompression: false
+          }
+        }
       },
       {
-        test: /\.m?js$/,
-        exclude: /node_modules/,
-        use: { loader: BABEL_LOADER },
+        test: /\.html$/i,
+        loader: HTML_LOADER
       },
       {
         test: /\.css$/i,
         use: [
           MiniCssExtractPlugin.loader,
-          CSS_LOADER,
-        ],
+          CSS_LOADER
+        ]
       },
       {
-        test: /\.(png|jpe?g|gif|svg)$/i,
-        type: 'asset/resource',
+        test: /\.(png|jpe?g|gif|svg|ico)$/i,
+        type: 'asset',
+        generator: {
+          filename: MEDIA_NAME
+        }
       },
       {
         test: /\.mp3$/,
@@ -82,13 +111,23 @@ const config = {
             options: {
               name: MP3_NAME,
               outputPath: AUDIO_PATH,
-              publicPath: AUDIO_PATH,
-            },
-          },
-        ],
-      },
-    ],
+              publicPath: AUDIO_PATH
+            }
+          }
+        ]
+      }
+    ]
   },
+  resolve: {
+    extensions: ['.js', '.jsx']
+  },
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      name: false
+    },
+    runtimeChunk: 'single'
+  }
 }
 
 if (!IS_DEV) {
@@ -99,9 +138,9 @@ if (!IS_DEV) {
       loader: STRING_REPLACE_LOADER,
       options: {
         search: SERVER_URL,
-        replace: '',
-      },
-    },
+        replace: ''
+      }
+    }
   })
 }
 
