@@ -12,45 +12,49 @@
   ],
   "routes": [
     {
-      "src": "^/static/(.*)",
+      "src": "^/static/js/(.+)\\.js$",
       "headers": {
+        "content-type": "application/javascript; charset=utf-8",
         "cache-control": "public, max-age=31536000, immutable",
-        "content-type": {
-          "js": "application/javascript",
-          "css": "text/css",
-          "map": "application/json"
-        }
+        "x-content-type-options": "nosniff"
       },
-      "continue": true,
-      "dest": "/static/$1"
+      "dest": "/static/js/$1.js"
     },
     {
-      "src": "^/static/js/(.+\\.js)$",
+      "src": "^/static/css/(.+)\\.css$",
       "headers": {
-        "content-type": "application/javascript",
+        "content-type": "text/css; charset=utf-8",
         "cache-control": "public, max-age=31536000, immutable"
       },
-      "dest": "/static/js/$1"
+      "dest": "/static/css/$1.css"
     },
     {
-      "src": "^/static/css/(.+\\.css)$",
-      "headers": {
-        "content-type": "text/css",
-        "cache-control": "public, max-age=31536000, immutable"
-      },
-      "dest": "/static/css/$1"
-    },
-    {
-      "src": "^/(.*\\.[a-z]+)$",
+      "src": "^/static/media/(.+)\\.(png|jpg|jpeg|gif|svg|ico|ttf|woff|woff2)$",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
       },
-      "dest": "/$1"
+      "dest": "/static/media/$1.$2"
     },
     {
-      "src": "^/(.*)$",
+      "src": "^/manifest\\.json$",
       "headers": {
-        "cache-control": "public, no-cache, must-revalidate"
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "public, max-age=0, must-revalidate"
+      },
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "^/favicon\\.ico$",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "^/robots\\.txt$",
+      "dest": "/robots.txt"
+    },
+    {
+      "src": "^/.*",
+      "headers": {
+        "cache-control": "public, max-age=0, must-revalidate"
       },
       "dest": "/index.html"
     }

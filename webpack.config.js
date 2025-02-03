@@ -15,7 +15,7 @@ const SERVER_URL = /http:\/\/localhost:9009/g
 const FRONTEND_PORT = 3003
 
 const DIST_PATH = 'dist'
-const PUBLIC_PATH = IS_DEV ? '/' : './'
+const PUBLIC_PATH = '/'
 const INDEX_HTML_PATH = './frontend/index.html'
 const INDEX_JS_PATH = './frontend/index.js'
 
@@ -37,7 +37,7 @@ const config = {
     new HtmlWebpackPlugin({
       template: INDEX_HTML_PATH,
       inject: true,
-      publicPath: '/',
+      publicPath: PUBLIC_PATH,
       minify: !IS_DEV && {
         removeComments: true,
         collapseWhitespace: true,
@@ -59,9 +59,15 @@ const config = {
   devServer: {
     static: {
       directory: path.join(__dirname, DIST_PATH),
-      publicPath: '/'
+      publicPath: PUBLIC_PATH
     },
-    historyApiFallback: true,
+    historyApiFallback: {
+      disableDotRule: true,
+      rewrites: [
+        { from: /^\/static\/.*/, to: context => context.parsedUrl.pathname },
+        { from: /./, to: '/index.html' }
+      ]
+    },
     compress: true,
     port: FRONTEND_PORT,
     client: { logging: 'none' },
@@ -92,11 +98,18 @@ const config = {
       {
         test: /\.css$/i,
         use: [
-          IS_DEV ? 'style-loader' : MiniCssExtractPlugin.loader,
+          IS_DEV ? 'style-loader' : {
+            loader: MiniCssExtractPlugin.loader,
+            options: { publicPath: PUBLIC_PATH }
+          },
           {
             loader: CSS_LOADER,
             options: {
-              importLoaders: 1
+              importLoaders: 1,
+              modules: {
+                auto: true,
+                localIdentName: IS_DEV ? '[name]__[local]--[hash:base64:5]' : '[hash:base64]'
+              }
             }
           }
         ]
@@ -108,6 +121,9 @@ const config = {
           dataUrlCondition: {
             maxSize: 8 * 1024 // 8kb
           }
+        },
+        generator: {
+          filename: 'static/media/[name].[hash:8][ext]'
         }
       },
       {
@@ -117,6 +133,9 @@ const config = {
           dataUrlCondition: {
             maxSize: 8 * 1024 // 8kb
           }
+        },
+        generator: {
+          filename: 'static/media/[name].[hash:8][ext]'
         }
       }
     ]
