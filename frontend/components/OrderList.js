@@ -67,21 +67,39 @@ const getSizeIcon = (size) => {
 };
 
 export default function OrderList() {
-  const { data: orders = [], isLoading, error } = useGetOrdersQuery();
+  const { data, isLoading, error } = useGetOrdersQuery(undefined, {
+    refetchOnMountOrArgChange: true
+  });
   const currentFilter = useSelector(st => st.pizza.size);
   const dispatch = useDispatch();
 
   if (isLoading) {
-    return <div>Loading orders...</div>;
+    return (
+      <div id="orderList">
+        <h2>
+          <FontAwesomeIcon icon={faPizzaSlice} className="pizza-icon" />
+          Loading Orders...
+        </h2>
+      </div>
+    );
   }
 
   if (error) {
-    return <div>Error loading orders: {error.message}</div>;
+    return (
+      <div id="orderList">
+        <h2>
+          <FontAwesomeIcon icon={faPizzaSlice} className="pizza-icon" />
+          Error Loading Orders
+        </h2>
+        <div>{error.toString()}</div>
+      </div>
+    );
   }
 
-  const filteredOrders = Array.isArray(orders)
-    ? orders.filter(ord => currentFilter === "All" || currentFilter === ord.size)
-    : [];
+  const orders = data || [];
+  const filteredOrders = orders.filter(
+    order => currentFilter === "All" || order.size === currentFilter
+  );
 
   return (
     <div id="orderList">
@@ -90,46 +108,39 @@ export default function OrderList() {
         Pizza Orders
       </h2>
       <ol>
-        {filteredOrders.map(ord => {
-          const { id, customer, size, toppings = [] } = ord;
-          return (
-            <li key={id}>
-              <div className="order-details">
-                <div>
-                  <FontAwesomeIcon icon={faUser} className="pizza-icon" />
-                  <strong>{customer}</strong>
-                </div>
-                <div>
-                  <FontAwesomeIcon icon={faRuler} className="pizza-icon" />
-                  Size: {size} {getSizeIcon(size)}
-                </div>
-                <div>
-                  <FontAwesomeIcon icon={faPizzaSlice} className="pizza-icon" />
-                  Toppings: {toppings.length || "no"} {toppings.length === 1 ? "topping" : "toppings"}
-                </div>
+        {filteredOrders.map(order => (
+          <li key={order.id}>
+            <div className="order-details">
+              <div>
+                <FontAwesomeIcon icon={faUser} className="pizza-icon" />
+                <strong>{order.customer}</strong>
               </div>
-            </li>
-          );
-        })}
+              <div>
+                <FontAwesomeIcon icon={faRuler} className="pizza-icon" />
+                Size: {order.size} {getSizeIcon(order.size)}
+              </div>
+              <div>
+                <FontAwesomeIcon icon={faPizzaSlice} className="pizza-icon" />
+                Toppings: {order.toppings?.length || "no"} {order.toppings?.length === 1 ? "topping" : "toppings"}
+              </div>
+            </div>
+          </li>
+        ))}
       </ol>
 
       <div id="sizeFilters">
         <FontAwesomeIcon icon={faFilter} className="pizza-icon" />
         Filter by size:
-        {['All', 'S', 'M', 'L'].map(size => {
-          const onClick = () => dispatch(setFilter(size));
-          const className = `button-filter${size === currentFilter ? " active" : ""}`;
-          return (
-            <button
-              data-testid={`filterBtn${size}`}
-              className={className}
-              key={size}
-              onClick={onClick}
-            >
-              {size === 'All' ? size : getSizeIcon(size)}
-            </button>
-          );
-        })}
+        {['All', 'S', 'M', 'L'].map(size => (
+          <button
+            key={size}
+            data-testid={`filterBtn${size}`}
+            className={`button-filter${size === currentFilter ? " active" : ""}`}
+            onClick={() => dispatch(setFilter(size))}
+          >
+            {size === 'All' ? size : getSizeIcon(size)}
+          </button>
+        ))}
       </div>
     </div>
   );

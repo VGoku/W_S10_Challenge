@@ -24,7 +24,7 @@
 // } = pizzaApi
 
 
-import { createApi } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 // Available pizza sizes and toppings
 export const PIZZA_SIZES = ['S', 'M', 'L', 'XL'];
@@ -46,135 +46,72 @@ const mockOrders = [
     customer: 'John Doe',
     size: 'L',
     toppings: ['Pepperoni', 'Mushrooms', 'Extra Cheese'],
-    timestamp: '2024-02-10T14:30:00Z',
-    status: 'completed'
+    timestamp: '2024-02-10T14:30:00Z'
   },
   {
     id: 2,
     customer: 'Jane Smith',
     size: 'M',
     toppings: ['Olives', 'Bell Peppers', 'Onions'],
-    timestamp: '2024-02-10T14:15:00Z',
-    status: 'in_progress'
+    timestamp: '2024-02-10T14:15:00Z'
   },
   {
     id: 3,
     customer: 'Bob Wilson',
-    size: 'XL',
+    size: 'L',
     toppings: ['Pepperoni', 'Sausage', 'Bacon', 'Extra Cheese'],
-    timestamp: '2024-02-10T14:00:00Z',
-    status: 'completed'
+    timestamp: '2024-02-10T14:00:00Z'
   }
 ];
 
 let nextId = 4;
 let orders = [...mockOrders];
 
-// Helper function to validate order
-const validateOrder = (order) => {
-  const errors = [];
-
-  if (!order.fullName?.trim()) {
-    errors.push('Full name is required');
-  }
-
-  if (!order.size) {
-    errors.push('Pizza size is required');
-  } else if (!PIZZA_SIZES.includes(order.size)) {
-    errors.push(`Invalid pizza size. Must be one of: ${PIZZA_SIZES.join(', ')}`);
-  }
-
-  if (!order.toppings || order.toppings.length === 0) {
-    errors.push('At least one topping is required');
-  } else {
-    const invalidToppings = order.toppings.filter(t => !PIZZA_TOPPINGS.includes(t));
-    if (invalidToppings.length > 0) {
-      errors.push(`Invalid toppings: ${invalidToppings.join(', ')}`);
-    }
-  }
-
-  return errors;
-};
+// Dummy base query that always returns success
+const dummyBaseQuery = fetchBaseQuery({
+  baseUrl: '/',
+});
 
 export const pizzaApi = createApi({
-  reducerPath: "pizzaApi",
-  baseQuery: () => ({ data: null }),
-  tagTypes: ["Orders"],
+  reducerPath: 'pizzaApi',
+  baseQuery: dummyBaseQuery,
+  tagTypes: ['Orders'],
   endpoints: (builder) => ({
     getOrders: builder.query({
       queryFn: () => {
-        try {
-          // Return orders directly as the data
-          return { data: orders };
-        } catch (error) {
-          return {
-            error: {
-              status: 500,
-              data: { message: 'Failed to retrieve orders' }
-            }
-          };
-        }
+        return { data: orders };
       },
-      providesTags: ["Orders"]
+      providesTags: ['Orders'],
     }),
     createOrder: builder.mutation({
       queryFn: (newOrder) => {
-        try {
-          // Validate required fields
-          if (!newOrder.fullName?.trim()) {
-            return {
-              error: {
-                status: 400,
-                data: { message: 'Full name is required' }
-              }
-            };
-          }
-          if (!newOrder.size) {
-            return {
-              error: {
-                status: 400,
-                data: { message: 'Pizza size is required' }
-              }
-            };
-          }
-          if (!newOrder.toppings || !Array.isArray(newOrder.toppings) || newOrder.toppings.length === 0) {
-            return {
-              error: {
-                status: 400,
-                data: { message: 'At least one topping is required' }
-              }
-            };
-          }
-
-          // Create new order
-          const order = {
-            id: nextId++,
-            customer: newOrder.fullName.trim(),
-            size: newOrder.size,
-            toppings: Array.isArray(newOrder.toppings) ? newOrder.toppings : [],
-            timestamp: new Date().toISOString(),
-            status: 'in_progress'
-          };
-
-          // Add to mock database
-          orders = [order, ...orders];
-
-          return { data: order };
-        } catch (error) {
-          return {
-            error: {
-              status: 500,
-              data: { message: 'An unexpected error occurred while creating your order' }
-            }
-          };
+        if (!newOrder.fullName?.trim()) {
+          throw new Error('Full name is required');
         }
+        if (!newOrder.size) {
+          throw new Error('Size is required');
+        }
+        if (!newOrder.toppings?.length) {
+          throw new Error('At least one topping is required');
+        }
+
+        const order = {
+          id: nextId++,
+          customer: newOrder.fullName.trim(),
+          size: newOrder.size,
+          toppings: newOrder.toppings,
+          timestamp: new Date().toISOString()
+        };
+
+        orders = [order, ...orders];
+        return { data: order };
       },
-      invalidatesTags: ["Orders"]
-    })
-  })
+      invalidatesTags: ['Orders'],
+    }),
+  }),
 });
 
 export const {
   useGetOrdersQuery,
-  useCreateOrderMutation
+  useCreateOrderMutation,
 } = pizzaApi;
