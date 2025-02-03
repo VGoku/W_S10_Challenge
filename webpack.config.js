@@ -59,7 +59,9 @@ const config = {
   devServer: {
     static: {
       directory: path.join(__dirname, DIST_PATH),
-      publicPath: PUBLIC_PATH
+      publicPath: PUBLIC_PATH,
+      serveIndex: true,
+      watch: true
     },
     historyApiFallback: {
       disableDotRule: true,
@@ -68,10 +70,16 @@ const config = {
         { from: /./, to: '/index.html' }
       ]
     },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
+    },
     compress: true,
     port: FRONTEND_PORT,
     client: { logging: 'none' },
-    hot: true
+    hot: true,
+    open: true
   },
   module: {
     rules: [
@@ -123,7 +131,8 @@ const config = {
           }
         },
         generator: {
-          filename: 'static/media/[name].[hash:8][ext]'
+          filename: 'static/media/[name].[hash:8][ext]',
+          publicPath: PUBLIC_PATH
         }
       },
       {
@@ -135,7 +144,8 @@ const config = {
           }
         },
         generator: {
-          filename: 'static/media/[name].[hash:8][ext]'
+          filename: 'static/media/[name].[hash:8][ext]',
+          publicPath: PUBLIC_PATH
         }
       }
     ]
@@ -147,27 +157,46 @@ const config = {
     }
   },
   optimization: {
+    moduleIds: 'deterministic',
+    runtimeChunk: 'single',
     splitChunks: {
       chunks: 'all',
-      name: false,
+      maxInitialRequests: Infinity,
+      minSize: 20000,
       cacheGroups: {
         vendor: {
-          name: 'vendors',
           test: /[\\/]node_modules[\\/]/,
-          chunks: 'all',
+          name(module) {
+            // Get the package name
+            const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1]
+            // Replace @ symbols and slashes with hyphens for cleaner chunk names
+            return `vendor.${packageName.replace('@', '').replace('/', '-')}`
+          },
           priority: 20
         },
         common: {
           name: 'common',
           minChunks: 2,
-          chunks: 'all',
           priority: 10,
           reuseExistingChunk: true,
+          enforce: true
+        },
+        styles: {
+          name: 'styles',
+          test: /\.css$/,
+          chunks: 'all',
           enforce: true
         }
       }
     },
-    runtimeChunk: 'single'
+    minimize: !IS_DEV,
+    usedExports: true,
+    sideEffects: true
+  },
+  performance: {
+    maxEntrypointSize: 512000,
+    maxAssetSize: 512000,
+    hints: !IS_DEV ? 'warning' : false
   }
 }
 
