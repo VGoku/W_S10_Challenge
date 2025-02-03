@@ -11,7 +11,8 @@ module.exports = {
   entry: './frontend/index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: IS_DEV ? '[name].js' : '[name].[contenthash].js',
+    filename: IS_DEV ? '[name].js' : 'js/[name].[contenthash:8].js',
+    chunkFilename: IS_DEV ? '[name].chunk.js' : 'js/[name].[contenthash:8].chunk.js',
     publicPath: '/',
     clean: true
   },
@@ -33,7 +34,8 @@ module.exports = {
       }
     }),
     new MiniCssExtractPlugin({
-      filename: IS_DEV ? '[name].css' : '[name].[contenthash].css'
+      filename: IS_DEV ? '[name].css' : 'css/[name].[contenthash:8].css',
+      chunkFilename: IS_DEV ? '[name].chunk.css' : 'css/[name].[contenthash:8].chunk.css'
     })
   ],
   module: {
@@ -45,10 +47,17 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             presets: [
-              ['@babel/preset-env', { targets: 'defaults' }],
+              ['@babel/preset-env', {
+                targets: 'defaults',
+                useBuiltIns: 'usage',
+                corejs: 3
+              }],
               ['@babel/preset-react', { runtime: 'automatic' }]
             ],
-            plugins: ['babel-plugin-styled-components']
+            plugins: [
+              'babel-plugin-styled-components',
+              '@babel/plugin-transform-runtime'
+            ]
           }
         }
       },
@@ -56,7 +65,12 @@ module.exports = {
         test: /\.css$/,
         use: [
           IS_DEV ? 'style-loader' : MiniCssExtractPlugin.loader,
-          'css-loader'
+          {
+            loader: 'css-loader',
+            options: {
+              sourceMap: IS_DEV
+            }
+          }
         ]
       },
       {
@@ -68,7 +82,7 @@ module.exports = {
           }
         },
         generator: {
-          filename: 'assets/[name].[hash][ext]'
+          filename: 'assets/[name].[hash:8][ext]'
         }
       }
     ]
@@ -88,7 +102,19 @@ module.exports = {
   optimization: {
     splitChunks: {
       chunks: 'all',
-      name: false
-    }
+      name: false,
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all'
+        }
+      }
+    },
+    runtimeChunk: 'single'
+  },
+  performance: {
+    maxEntrypointSize: 512000,
+    maxAssetSize: 512000
   }
 }

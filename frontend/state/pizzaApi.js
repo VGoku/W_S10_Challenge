@@ -26,15 +26,75 @@
 
 import { createApi } from "@reduxjs/toolkit/query/react";
 
-// Mock data for static deployment
+// Available pizza sizes and toppings
+export const PIZZA_SIZES = ['S', 'M', 'L', 'XL'];
+export const PIZZA_TOPPINGS = [
+  'Pepperoni',
+  'Mushrooms',
+  'Onions',
+  'Sausage',
+  'Bell Peppers',
+  'Olives',
+  'Extra Cheese',
+  'Bacon'
+];
+
+// Mock data with realistic orders
 const mockOrders = [
-  { id: 1, customer: 'John Doe', size: 'L', toppings: ['Pepperoni', 'Mushrooms'] },
-  { id: 2, customer: 'Jane Smith', size: 'M', toppings: ['Olives', 'Bell Peppers', 'Onions'] },
-  { id: 3, customer: 'Bob Wilson', size: 'S', toppings: ['Pepperoni', 'Onions'] },
+  {
+    id: 1,
+    customer: 'John Doe',
+    size: 'L',
+    toppings: ['Pepperoni', 'Mushrooms', 'Extra Cheese'],
+    timestamp: '2024-02-10T14:30:00Z',
+    status: 'completed'
+  },
+  {
+    id: 2,
+    customer: 'Jane Smith',
+    size: 'M',
+    toppings: ['Olives', 'Bell Peppers', 'Onions'],
+    timestamp: '2024-02-10T14:15:00Z',
+    status: 'in_progress'
+  },
+  {
+    id: 3,
+    customer: 'Bob Wilson',
+    size: 'XL',
+    toppings: ['Pepperoni', 'Sausage', 'Bacon', 'Extra Cheese'],
+    timestamp: '2024-02-10T14:00:00Z',
+    status: 'completed'
+  }
 ];
 
 let nextId = 4;
 let orders = [...mockOrders];
+
+// Helper function to validate order
+const validateOrder = (order) => {
+  const errors = [];
+
+  if (!order.fullName?.trim()) {
+    errors.push('Full name is required');
+  }
+
+  if (!order.size) {
+    errors.push('Pizza size is required');
+  } else if (!PIZZA_SIZES.includes(order.size)) {
+    errors.push(`Invalid pizza size. Must be one of: ${PIZZA_SIZES.join(', ')}`);
+  }
+
+  if (!order.toppings || order.toppings.length === 0) {
+    errors.push('At least one topping is required');
+  } else {
+    const invalidToppings = order.toppings.filter(t => !PIZZA_TOPPINGS.includes(t));
+    if (invalidToppings.length > 0) {
+      errors.push(`Invalid toppings: ${invalidToppings.join(', ')}`);
+    }
+  }
+
+  return errors;
+};
 
 export const pizzaApi = createApi({
   reducerPath: "pizzaApi",
@@ -47,7 +107,7 @@ export const pizzaApi = createApi({
           return {
             data: {
               success: true,
-              orders: orders,
+              orders: orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
               message: 'Orders retrieved successfully'
             }
           };
@@ -65,39 +125,28 @@ export const pizzaApi = createApi({
     createOrder: builder.mutation({
       queryFn: (newOrder) => {
         try {
-          // Validate required fields
-          if (!newOrder.fullName) {
+          // Validate the order
+          const validationErrors = validateOrder(newOrder);
+          if (validationErrors.length > 0) {
             return {
               error: {
                 status: 400,
-                data: { message: 'Full name is required' }
-              }
-            };
-          }
-          if (!newOrder.size) {
-            return {
-              error: {
-                status: 400,
-                data: { message: 'Pizza size is required' }
-              }
-            };
-          }
-          if (!newOrder.toppings || newOrder.toppings.length === 0) {
-            return {
-              error: {
-                status: 400,
-                data: { message: 'At least one topping is required' }
+                data: {
+                  message: 'Validation failed',
+                  errors: validationErrors
+                }
               }
             };
           }
 
-          // Create new order
+          // Create new order with current timestamp
           const order = {
             id: nextId++,
-            customer: newOrder.fullName,
+            customer: newOrder.fullName.trim(),
             size: newOrder.size,
             toppings: newOrder.toppings,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            status: 'in_progress'
           };
 
           // Add to mock database
@@ -106,7 +155,7 @@ export const pizzaApi = createApi({
           return {
             data: {
               success: true,
-              message: 'Order created successfully',
+              message: 'Order created successfully! Your pizza is being prepared.',
               order
             }
           };
@@ -114,7 +163,7 @@ export const pizzaApi = createApi({
           return {
             error: {
               status: 500,
-              data: { message: 'Failed to create order' }
+              data: { message: 'An unexpected error occurred while creating your order. Please try again.' }
             }
           };
         }
