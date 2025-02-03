@@ -1,5 +1,5 @@
 {
-  "name": "w_s10_challenge",
+  "name": "vgoku-pizzeria",
   "version": "0.0.1",
   "scripts": {
     "dev": "fkill :9009 :3003 -f -s && concurrently \"npm:backend\" \"npm:frontend\"",
@@ -9,7 +9,7 @@
     "frontend": "webpack serve --open",
     "backend": "node backend/server.js",
     "start": "npm run backend",
-    "heroku-postbuild": "npm run build"
+    "vercel-build": "npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.23.9",
@@ -63,6 +63,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bloominstituteoftechnology/W_S10_Challenge.git"
+    "url": "git+https://github.com/yourusername/vgoku-pizzeria.git"
   }
 }
