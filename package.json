@@ -8,8 +8,9 @@
     "build": "cross-env NODE_ENV=production webpack --mode production",
     "frontend": "webpack serve --open",
     "backend": "node backend/server.js",
-    "start": "npm run backend",
-    "vercel-build": "cross-env NODE_ENV=production npm run build"
+    "start": "node backend/server.js",
+    "vercel-build": "cross-env NODE_ENV=production webpack --mode production",
+    "vercel-start": "node backend/server.js"
   },
   "devDependencies": {
     "@babel/core": "^7.23.9",
