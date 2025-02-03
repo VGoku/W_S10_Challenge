@@ -19,25 +19,20 @@ const DIST_PATH = 'dist'
 const PUBLIC_PATH = '/'
 const INDEX_HTML_PATH = './frontend/index.html'
 const INDEX_JS_PATH = './frontend/index.js'
-const AUDIO_PATH = 'audio/'
-
-const JS_NAME = '[name].[contenthash].js'
-const CSS_NAME = '[name].[contenthash].css'
-const MEDIA_NAME = 'media/[name].[hash].[ext]'
-const MP3_NAME = '[name].[ext]'
-
-const SOURCE_MAP = IS_DEV ? 'source-map' : false
 
 const config = {
-  entry: INDEX_JS_PATH,
+  entry: {
+    main: INDEX_JS_PATH
+  },
   mode: ENV,
   output: {
-    filename: JS_NAME,
-    publicPath: PUBLIC_PATH,
     path: path.resolve(__dirname, DIST_PATH),
+    filename: 'static/js/[name].[contenthash:8].js',
+    chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
+    publicPath: PUBLIC_PATH,
     clean: true
   },
-  devtool: SOURCE_MAP,
+  devtool: IS_DEV ? 'source-map' : false,
   plugins: [
     new HtmlWebpackPlugin({
       template: INDEX_HTML_PATH,
@@ -56,7 +51,8 @@ const config = {
       }
     }),
     new MiniCssExtractPlugin({
-      filename: CSS_NAME
+      filename: 'static/css/[name].[contenthash:8].css',
+      chunkFilename: 'static/css/[name].[contenthash:8].chunk.css'
     })
   ],
   devServer: {
@@ -76,7 +72,7 @@ const config = {
           loader: BABEL_LOADER,
           options: {
             presets: [
-              '@babel/preset-env',
+              ['@babel/preset-env', { targets: { node: 'current' } }],
               ['@babel/preset-react', { runtime: 'automatic' }]
             ],
             plugins: ['babel-plugin-styled-components'],
@@ -100,31 +96,35 @@ const config = {
         test: /\.(png|jpe?g|gif|svg|ico)$/i,
         type: 'asset',
         generator: {
-          filename: MEDIA_NAME
+          filename: 'static/media/[name].[hash:8][ext]'
         }
       },
       {
-        test: /\.mp3$/,
-        use: [
-          {
-            loader: FILE_LOADER,
-            options: {
-              name: MP3_NAME,
-              outputPath: AUDIO_PATH,
-              publicPath: AUDIO_PATH
-            }
-          }
-        ]
+        test: /\.(woff|woff2|eot|ttf|otf)$/i,
+        type: 'asset',
+        generator: {
+          filename: 'static/fonts/[name].[hash:8][ext]'
+        }
       }
     ]
   },
   resolve: {
-    extensions: ['.js', '.jsx']
+    extensions: ['.js', '.jsx', '.json'],
+    alias: {
+      '@': path.resolve(__dirname, 'frontend')
+    }
   },
   optimization: {
     splitChunks: {
       chunks: 'all',
-      name: false
+      name: false,
+      cacheGroups: {
+        vendor: {
+          name: 'vendors',
+          test: /[\\/]node_modules[\\/]/,
+          chunks: 'all'
+        }
+      }
     },
     runtimeChunk: 'single'
   }

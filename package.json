@@ -5,11 +5,11 @@
     "dev": "fkill :9009 :3003 -f -s && concurrently \"npm:backend\" \"npm:frontend\"",
     "test": "cross-env NODE_ENV=testing jest --watchAll --verbose",
     "test:codegrade": "cross-env NODE_ENV=testing jest",
-    "build": "NODE_ENV=production webpack --mode production",
+    "build": "cross-env NODE_ENV=production webpack --mode production",
     "frontend": "webpack serve --open",
     "backend": "node backend/server.js",
     "start": "npm run backend",
-    "vercel-build": "NODE_ENV=production npm run build"
+    "vercel-build": "cross-env NODE_ENV=production npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.23.9",
