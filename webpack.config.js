@@ -10,7 +10,6 @@ const HTML_LOADER = 'html-loader'
 const CSS_LOADER = 'css-loader'
 const BABEL_LOADER = 'babel-loader'
 const STRING_REPLACE_LOADER = 'string-replace-loader'
-const FILE_LOADER = 'file-loader'
 
 const SERVER_URL = /http:\/\/localhost:9009/g
 const FRONTEND_PORT = 3003
@@ -27,17 +26,18 @@ const config = {
   mode: ENV,
   output: {
     path: path.resolve(__dirname, DIST_PATH),
-    filename: 'static/js/[name].[contenthash:8].js',
-    chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
+    filename: IS_DEV ? '[name].js' : 'static/js/[name].[contenthash:8].js',
+    chunkFilename: IS_DEV ? '[name].chunk.js' : 'static/js/[name].[contenthash:8].chunk.js',
     publicPath: PUBLIC_PATH,
-    clean: true
+    clean: true,
+    assetModuleFilename: 'static/media/[name].[hash:8][ext]'
   },
   devtool: IS_DEV ? 'source-map' : false,
   plugins: [
     new HtmlWebpackPlugin({
       template: INDEX_HTML_PATH,
       inject: true,
-      minify: {
+      minify: !IS_DEV && {
         removeComments: true,
         collapseWhitespace: true,
         removeRedundantAttributes: true,
@@ -51,12 +51,15 @@ const config = {
       }
     }),
     new MiniCssExtractPlugin({
-      filename: 'static/css/[name].[contenthash:8].css',
-      chunkFilename: 'static/css/[name].[contenthash:8].chunk.css'
+      filename: IS_DEV ? '[name].css' : 'static/css/[name].[contenthash:8].css',
+      chunkFilename: IS_DEV ? '[name].chunk.css' : 'static/css/[name].[contenthash:8].chunk.css'
     })
   ],
   devServer: {
-    static: path.join(__dirname, DIST_PATH),
+    static: {
+      directory: path.join(__dirname, DIST_PATH),
+      publicPath: PUBLIC_PATH
+    },
     historyApiFallback: true,
     compress: true,
     port: FRONTEND_PORT,
@@ -72,7 +75,7 @@ const config = {
           loader: BABEL_LOADER,
           options: {
             presets: [
-              ['@babel/preset-env', { targets: { node: 'current' } }],
+              ['@babel/preset-env', { targets: 'defaults' }],
               ['@babel/preset-react', { runtime: 'automatic' }]
             ],
             plugins: ['babel-plugin-styled-components'],
@@ -88,22 +91,26 @@ const config = {
       {
         test: /\.css$/i,
         use: [
-          MiniCssExtractPlugin.loader,
+          IS_DEV ? 'style-loader' : MiniCssExtractPlugin.loader,
           CSS_LOADER
         ]
       },
       {
         test: /\.(png|jpe?g|gif|svg|ico)$/i,
         type: 'asset',
-        generator: {
-          filename: 'static/media/[name].[hash:8][ext]'
+        parser: {
+          dataUrlCondition: {
+            maxSize: 8 * 1024 // 8kb
+          }
         }
       },
       {
         test: /\.(woff|woff2|eot|ttf|otf)$/i,
         type: 'asset',
-        generator: {
-          filename: 'static/fonts/[name].[hash:8][ext]'
+        parser: {
+          dataUrlCondition: {
+            maxSize: 8 * 1024 // 8kb
+          }
         }
       }
     ]
@@ -122,7 +129,16 @@ const config = {
         vendor: {
           name: 'vendors',
           test: /[\\/]node_modules[\\/]/,
-          chunks: 'all'
+          chunks: 'all',
+          priority: 20
+        },
+        common: {
+          name: 'common',
+          minChunks: 2,
+          chunks: 'all',
+          priority: 10,
+          reuseExistingChunk: true,
+          enforce: true
         }
       }
     },
