@@ -21,16 +21,16 @@ const INDEX_JS_PATH = './frontend/index.js'
 
 const config = {
   entry: {
-    main: INDEX_JS_PATH
+    index: INDEX_JS_PATH
   },
   mode: ENV,
   output: {
     path: path.resolve(__dirname, DIST_PATH),
-    filename: IS_DEV ? '[name].js' : 'static/js/[name].[contenthash:8].js',
-    chunkFilename: IS_DEV ? '[name].chunk.js' : 'static/js/[name].[contenthash:8].js',
+    filename: IS_DEV ? '[name].js' : '[name].[contenthash].js',
+    chunkFilename: IS_DEV ? '[name].chunk.js' : '[name].[contenthash].js',
     publicPath: PUBLIC_PATH,
     clean: true,
-    assetModuleFilename: 'static/media/[name].[hash:8][ext]'
+    assetModuleFilename: '[name].[hash][ext]'
   },
   devtool: IS_DEV ? 'source-map' : false,
   plugins: [
@@ -52,8 +52,8 @@ const config = {
       }
     }),
     new MiniCssExtractPlugin({
-      filename: IS_DEV ? '[name].css' : 'static/css/[name].[contenthash:8].css',
-      chunkFilename: IS_DEV ? '[name].chunk.css' : 'static/css/[name].[contenthash:8].css'
+      filename: IS_DEV ? '[name].css' : 'style.[contenthash].css',
+      chunkFilename: IS_DEV ? '[name].chunk.css' : '[name].[contenthash].css'
     })
   ],
   devServer: {
@@ -66,7 +66,7 @@ const config = {
     historyApiFallback: {
       disableDotRule: true,
       rewrites: [
-        { from: /^\/static\/.*/, to: context => context.parsedUrl.pathname },
+        { from: /^\/_next\/static.*/, to: context => context.parsedUrl.pathname },
         { from: /./, to: '/index.html' }
       ]
     },
@@ -106,10 +106,7 @@ const config = {
       {
         test: /\.css$/i,
         use: [
-          IS_DEV ? 'style-loader' : {
-            loader: MiniCssExtractPlugin.loader,
-            options: { publicPath: PUBLIC_PATH }
-          },
+          IS_DEV ? 'style-loader' : MiniCssExtractPlugin.loader,
           {
             loader: CSS_LOADER,
             options: {
@@ -129,10 +126,6 @@ const config = {
           dataUrlCondition: {
             maxSize: 8 * 1024 // 8kb
           }
-        },
-        generator: {
-          filename: 'static/media/[name].[hash:8][ext]',
-          publicPath: PUBLIC_PATH
         }
       },
       {
@@ -142,10 +135,6 @@ const config = {
           dataUrlCondition: {
             maxSize: 8 * 1024 // 8kb
           }
-        },
-        generator: {
-          filename: 'static/media/[name].[hash:8][ext]',
-          publicPath: PUBLIC_PATH
         }
       }
     ]
@@ -158,35 +147,8 @@ const config = {
   },
   optimization: {
     moduleIds: 'deterministic',
-    runtimeChunk: 'single',
-    splitChunks: {
-      chunks: 'all',
-      maxInitialRequests: Infinity,
-      minSize: 20000,
-      cacheGroups: {
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name(module) {
-            const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1]
-            return `vendor.${packageName.replace('@', '').replace('/', '-')}`
-          },
-          priority: 20
-        },
-        common: {
-          name: 'common',
-          minChunks: 2,
-          priority: 10,
-          reuseExistingChunk: true,
-          enforce: true
-        },
-        styles: {
-          name: 'styles',
-          test: /\.css$/,
-          chunks: 'all',
-          enforce: true
-        }
-      }
-    },
+    runtimeChunk: false,
+    splitChunks: false,
     minimize: !IS_DEV,
     usedExports: true,
     sideEffects: true
