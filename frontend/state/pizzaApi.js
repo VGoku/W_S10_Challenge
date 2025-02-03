@@ -24,7 +24,7 @@
 // } = pizzaApi
 
 
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 
 // Mock data for static deployment
 const mockOrders = [
@@ -38,66 +38,86 @@ let orders = [...mockOrders];
 
 export const pizzaApi = createApi({
   reducerPath: "pizzaApi",
-  baseQuery: fetchBaseQuery({ baseUrl: "/" }),
+  baseQuery: () => ({ data: null }), // Dummy base query since we're using queryFn
   tagTypes: ["Orders"],
   endpoints: (builder) => ({
     getOrders: builder.query({
-      query: () => ({
-        url: "pizza/history",
-        method: "GET",
-        validateStatus: () => true // Always return success for mock data
-      }),
-      // Override queryFn to use mock data instead of making HTTP request
       queryFn: () => {
-        return { data: orders };
+        try {
+          return {
+            data: {
+              success: true,
+              orders: orders,
+              message: 'Orders retrieved successfully'
+            }
+          };
+        } catch (error) {
+          return {
+            error: {
+              status: 500,
+              data: { message: 'Failed to retrieve orders' }
+            }
+          };
+        }
       },
       providesTags: ["Orders"]
     }),
     createOrder: builder.mutation({
-      query: (newOrder) => ({
-        url: "pizza/order",
-        method: "POST",
-        body: newOrder,
-        validateStatus: () => true // Always return success for mock data
-      }),
-      // Override queryFn to use mock data instead of making HTTP request
       queryFn: (newOrder) => {
-        // Validate required fields
-        if (!newOrder.fullName) {
-          return {
-            error: { status: 400, data: { message: 'Full name is required' } }
-          };
-        }
-        if (!newOrder.size) {
-          return {
-            error: { status: 400, data: { message: 'Pizza size is required' } }
-          };
-        }
-        if (!newOrder.toppings || newOrder.toppings.length === 0) {
-          return {
-            error: { status: 400, data: { message: 'At least one topping is required' } }
-          };
-        }
-
-        // Create new order
-        const order = {
-          id: nextId++,
-          customer: newOrder.fullName,
-          size: newOrder.size,
-          toppings: newOrder.toppings,
-          timestamp: new Date().toISOString()
-        };
-
-        // Add to mock database
-        orders = [order, ...orders];
-
-        return {
-          data: {
-            success: true,
-            message: 'Order created successfully',
-            order
+        try {
+          // Validate required fields
+          if (!newOrder.fullName) {
+            return {
+              error: {
+                status: 400,
+                data: { message: 'Full name is required' }
+              }
+            };
           }
-        };
+          if (!newOrder.size) {
+            return {
+              error: {
+                status: 400,
+                data: { message: 'Pizza size is required' }
+              }
+            };
+          }
+          if (!newOrder.toppings || newOrder.toppings.length === 0) {
+            return {
+              error: {
+                status: 400,
+                data: { message: 'At least one topping is required' }
+              }
+            };
+          }
+
+          // Create new order
+          const order = {
+            id: nextId++,
+            customer: newOrder.fullName,
+            size: newOrder.size,
+            toppings: newOrder.toppings,
+            timestamp: new Date().toISOString()
+          };
+
+          // Add to mock database
+          orders = [order, ...orders];
+
+          return {
+            data: {
+              success: true,
+              message: 'Order created successfully',
+              order
+            }
+          };
+        } catch (error) {
+          return {
+            error: {
+              status: 500,
+              data: { message: 'Failed to create order' }
+            }
+          };
+        }
       },
       invalidatesTags: ["Orders"]
     })
